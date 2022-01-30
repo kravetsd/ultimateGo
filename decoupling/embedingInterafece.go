@@ -12,7 +12,7 @@ type admin struct {
 	level string
 }
 
-func (a admin) notify() {
+func (a *admin) notify() {
 	fmt.Printf("Notify admin %s via it's email %s\n", a.name, a.email)
 }
 
@@ -20,7 +20,7 @@ type notifier interface {
 	notify()
 }
 
-func (u user) notify() {
+func (u *user) notify() {
 	fmt.Printf("Notify user %s via it's email %s\n", u.name, u.email)
 }
 
@@ -37,7 +37,7 @@ func main() {
 		"super",
 	}
 
-	sendNotification(ad)
+	sendNotification(&ad)
 	// Notify user John Smith via it's email jsmith@example.com in case of inner is not overrided
 	// Notify admin John Smith via it's email jsmith@example.com in case of an admin method overrides iuser's method
 }
