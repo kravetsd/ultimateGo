@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+type System struct {
+	Xenia
+	Pillar
+}
+
 type Data struct {
 	Line string
 }
@@ -30,12 +35,12 @@ func (x *Xenia) Pull(d *Data) error {
 	}
 }
 
-type Pilar struct {
+type Pillar struct {
 	Host    string
 	Timeout time.Duration
 }
 
-func (p *Pilar) Store(d *Data) error {
+func (p *Pillar) Store(d *Data) error {
 	fmt.Println("Out:", d.Line)
 	return nil
 }
@@ -49,7 +54,7 @@ func Pull(x *Xenia, data []Data) (int, error) {
 	return len(data), nil
 }
 
-func Store(p *Pilar, data []Data) (int, error) {
+func Store(p *Pillar, data []Data) (int, error) {
 	for i := range data {
 		if err := p.Store(&data[i]); err != nil {
 			return len(data[:i]), err
@@ -58,6 +63,37 @@ func Store(p *Pilar, data []Data) (int, error) {
 	return len(data), nil
 }
 
+func Copy(s *System, batch int) error {
+	data := make([]Data, batch)
+
+	for {
+		i, err := Pull(&s.Xenia, data)
+		if i > 0 {
+			if _, err := Store(&s.Pillar, data[:i]); err != nil {
+				return err
+			}
+		}
+		if err != nil {
+			return err
+		}
+	}
+}
+
 func main() {
 	fmt.Println("This is a composition example.")
+
+	sys := System{
+		Xenia: Xenia{
+			Host:    "localhost:8000",
+			Timeout: time.Second,
+		},
+		Pillar: Pillar{
+			Host:    "localhost:9000",
+			Timeout: time.Second,
+		},
+	}
+
+	if err := Copy(&sys, 3); err != io.EOF {
+		fmt.Println(err)
+	}
 }
